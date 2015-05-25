@@ -1,4 +1,6 @@
 //use std::env;
+extern crate regex;
+
 mod code_line;
 mod line_diff;
 mod diff_type;

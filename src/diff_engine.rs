@@ -24,7 +24,13 @@ impl DiffEngine {
     pub fn make_diff(&mut self) {
         let lcs_inv: Vec<Changes> = LCS::get_lcs_inv(&self.source_lines, &self.target_lines);
 
-        for left_right_changes in &lcs_inv {
+        self.analize_lcs_inv(&lcs_inv);
+
+        DiffEngine::output(&lcs_inv);
+    }
+
+    fn analize_lcs_inv(&mut self, lcs_inv: &Vec<Changes>) {
+        for left_right_changes in lcs_inv {
             let left_changes = left_right_changes.left;
             let right_changes = left_right_changes.right;
 
@@ -39,6 +45,20 @@ impl DiffEngine {
                 let (from, to) = left_changes.unwrap();
                 for i in from..to + 1 {
                     self.source_lines[i].diff = Diff::Removed;
+                }
+            }
+
+            let (left_from, left_to) = left_changes.unwrap();
+            let (right_from, right_to) = right_changes.unwrap();
+            let rows = left_to - left_from + 1;
+            let cols = right_to - right_from + 1;
+
+            let mut levenstein_dist_matrix = vec![vec![0; rows]; cols];
+
+            for row in left_from..left_to + 1 {
+                for col in right_from..right_to + 1 {
+
+                    //levenstein_dist_matrix[row][col] = LCS::levenstein_distance();
                 }
             }
         }
@@ -62,20 +82,23 @@ impl DiffEngine {
     }
 
 
-            // println!("Len: {}", lcs_inv.len());
-            // for tuple in lcs_inv {
-            //     let l = tuple.left;
-            //     let r = tuple.right;
-            //     match l {
-            //         None => print!("none"),
-            //         Some((f,t)) => print!("{},{}", f, t),
-            //     }
-            //     print!("---");
-            //     match r {
-            //         None => print!("none"),
-            //         Some((f,t)) => print!("{},{}", f, t),
-            //     }
-            //     println!("");
-            // }
+    fn output(lcs_inv: &Vec<Changes>) {
+        println!("Len: {}", lcs_inv.len());
+        for tuple in lcs_inv {
+            let l = tuple.left;
+            let r = tuple.right;
+            match l {
+                None => print!("none"),
+                Some((f,t)) => print!("{},{}", f, t),
+            }
+            print!("---");
+            match r {
+                None => print!("none"),
+                Some((f,t)) => print!("{},{}", f, t),
+            }
+            println!("");
+        }
+    }
+
 
 }

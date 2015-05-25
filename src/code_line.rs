@@ -6,6 +6,11 @@ use std::ops::*;
 use std::iter::*;
 use line_diff::{ LineDiff };
 use diff_type::{ Diff };
+use regex::Regex;
+
+pub trait Line {
+    fn split<'a>(&'a self) -> Vec<&'a str>;
+}
 
 pub struct CodeLine {
     pub code: String,
@@ -37,6 +42,36 @@ impl CodeLine {
         let lines = lines_iter.collect::<Vec<_>>();
 
         lines
+    }
+}
+
+impl Line for CodeLine {
+    fn split<'a>(&'a self) -> Vec<&'a str> {
+        let word_regex = Regex::new(r"\b\w+\b").unwrap();
+        let words_iter = word_regex.find_iter(self.code.as_ref());
+        let special_symbol_regex = Regex::new(r"\W").unwrap();
+        let special_symbols_iter = special_symbol_regex.find_iter(self.code.as_ref());
+
+        let mut previous_word_last_idx = 0;
+        let line_last_idx = self.code.len();
+
+        let mut result = Vec::<_>::new();
+
+        for (from, to) in words_iter {
+            if from - previous_word_last_idx > 0 {
+                for char_idx in previous_word_last_idx..from {
+                    let s: &str = self.code.as_ref();
+                    // let char_slice = s.slice_chars(char_idx, char_idx + 1);
+                    // result.push(char_slice);
+                }
+            }
+            // let word_slice = self.code.slice_chars(from, to);
+            // result.push(word_slice);
+
+            previous_word_last_idx = to;
+        }
+
+        result
     }
 }
 
