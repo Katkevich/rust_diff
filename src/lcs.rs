@@ -9,21 +9,6 @@ use diff_type::{ Diff };
 
 pub struct LCS;
 
-#[derive(Clone)]
-pub struct LCSCell {
-    pub lcs: i32,
-    pub levenstein: i32,
-}
-
-impl LCSCell {
-    pub fn new() -> LCSCell {
-        LCSCell {
-            lcs: 0,
-            levenstein: 0,
-        }
-    }
-}
-
 pub struct Changes {
     pub left: Option<(usize, usize)>,
     pub right: Option<(usize, usize)>,
@@ -67,6 +52,13 @@ impl LCS {
                 matrix[i][j] = cmp::min(cmp::min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1), matrix[i - 1][j - 1] + diff);
             }
         }
+
+        // for r in &matrix {
+        //     for c in r {
+        //         print!("{} ", c);
+        //     }
+        //     println!("");
+        // }
 
         matrix[matrix_rows - 1][matrix_columns - 1]
     }

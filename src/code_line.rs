@@ -7,15 +7,18 @@ use std::iter::*;
 use line_diff::{ LineDiff };
 use diff_type::{ Diff };
 use regex::Regex;
+use slice_ext::SliceExt;
 
 pub trait Line {
     fn split<'a>(&'a self) -> Vec<&'a str>;
+
+    fn set_diff(&mut self, diff: Diff);
 }
 
 pub struct CodeLine {
     pub code: String,
     pub line_number: i32,
-    pub diff: Diff
+    diff: Diff
 }
 
 impl CodeLine {
@@ -46,6 +49,7 @@ impl CodeLine {
 }
 
 impl Line for CodeLine {
+
     fn split<'a>(&'a self) -> Vec<&'a str> {
         let word_regex = Regex::new(r"\b\w+\b").unwrap();
         let words_iter = word_regex.find_iter(self.code.as_ref());
@@ -60,18 +64,22 @@ impl Line for CodeLine {
         for (from, to) in words_iter {
             if from - previous_word_last_idx > 0 {
                 for char_idx in previous_word_last_idx..from {
-                    let s: &str = self.code.as_ref();
-                    // let char_slice = s.slice_chars(char_idx, char_idx + 1);
-                    // result.push(char_slice);
+                    let char_slice = self.code.slice(char_idx, char_idx + 1);
+                    result.push(char_slice);
                 }
             }
-            // let word_slice = self.code.slice_chars(from, to);
-            // result.push(word_slice);
+
+            let word_slice = self.code.slice(from, to);
+            result.push(word_slice);
 
             previous_word_last_idx = to;
         }
 
         result
+    }
+
+    fn set_diff(&mut self, diff: Diff) {
+        self.diff = diff;
     }
 }
 

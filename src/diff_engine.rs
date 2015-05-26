@@ -1,20 +1,19 @@
 use lcs::{ LCS, Changes };
-use code_line::{ CodeLine };
+use code_line::{ CodeLine, Line };
 use std::io::{ BufRead, BufReader, Lines };
 use std::fs::{ File };
 use line_diff::{ LineDiff };
 use diff_type::{ Diff };
 
-pub struct DiffEngine {
-    pub source_lines: Vec<CodeLine>,
-    pub target_lines: Vec<CodeLine>,
+pub struct DiffEngine<T> {
+    pub source_lines: Vec<T>,
+    pub target_lines: Vec<T>,
 }
 
-impl DiffEngine {
-    pub fn new(source: BufReader<File>, target: BufReader<File>) -> DiffEngine {
-        let source_lines = DiffEngine::parse(source);
-        let target_lines = DiffEngine::parse(target);
+impl<T> DiffEngine<T>
+where T: Line + PartialEq {
 
+    pub fn new(source_lines: Vec<T>, target_lines: Vec<T>) -> DiffEngine<T> {
         DiffEngine {
             source_lines: source_lines,
             target_lines: target_lines,
@@ -26,7 +25,7 @@ impl DiffEngine {
 
         self.analize_lcs_inv(&lcs_inv);
 
-        DiffEngine::output(&lcs_inv);
+        DiffEngine::<CodeLine>::output(&lcs_inv);
     }
 
     fn analize_lcs_inv(&mut self, lcs_inv: &Vec<Changes>) {
@@ -37,14 +36,14 @@ impl DiffEngine {
             if left_changes == Option::None {
                 let (from, to) = right_changes.unwrap();
                 for i in from..to + 1 {
-                    self.target_lines[i].diff = Diff::Added;
+                    self.target_lines[i].set_diff(Diff::Added);
                 }
             }
 
             if right_changes == Option::None {
                 let (from, to) = left_changes.unwrap();
                 for i in from..to + 1 {
-                    self.source_lines[i].diff = Diff::Removed;
+                    self.source_lines[i].set_diff(Diff::Removed);
                 }
             }
 
@@ -53,34 +52,40 @@ impl DiffEngine {
             let rows = left_to - left_from + 1;
             let cols = right_to - right_from + 1;
 
-            let mut levenstein_dist_matrix = vec![vec![0; rows]; cols];
+            let mut levenstein_dist_matrix = vec![vec![0; cols]; rows];
 
-            for row in left_from..left_to + 1 {
-                for col in right_from..right_to + 1 {
+            for left_idx in left_from..left_to + 1 {
+                for right_idx in right_from..right_to + 1 {
+                    let i = left_idx - left_from;
+                    let j = right_idx - right_from;
 
-                    //levenstein_dist_matrix[row][col] = LCS::levenstein_distance();
+                    let left_words = self.source_lines[left_idx].split();
+                    let right_words = self.target_lines[right_idx].split();
+
+                    let dist = LCS::levenstein_distance(&left_words, &right_words);
+
+                    levenstein_dist_matrix[i][j] = dist;
+                }
+            }
+
+            for row in 0..rows {
+                for col in 0..cols {
+
                 }
             }
         }
     }
 
-    fn parse(reader: BufReader<File>) -> Vec<CodeLine> {
-        let mut line_index = 0;
-        let lines_iter = reader
-            .lines()
-            .map(|x| {
-                line_index = line_index + 1;
-                match x {
-                    Err(err) => panic!("Invalid line {}", err),
-                    Ok(val) => CodeLine::new(val, line_index)
-                }
-            });
+    fn calculate_min_diff(matrix: &Vec<Vec<i32>>, row_from: i32, col_from: i32, matrix_dimm: (i32, i32)) -> i32 {
+        let (rows, cols) = matrix_dimm;
+        let row = &matrix[row_from as usize];
 
-        let lines = lines_iter.collect::<Vec<_>>();
+        for i in col_from..cols {
+            let min = DiffEngine::<CodeLine>::calculate_min_diff(matrix, row_from - 1, i, matrix_dimm);
+        }
 
-        lines
+        1
     }
-
 
     fn output(lcs_inv: &Vec<Changes>) {
         println!("Len: {}", lcs_inv.len());
@@ -100,5 +105,14 @@ impl DiffEngine {
         }
     }
 
-
+    //
+    // println!("");
+    // for lw in &left_words {
+    //     print!("{}_", lw);
+    // }
+    // println!("");
+    // for rw in &right_words {
+    //     print!("{}_", rw);
+    // }
+    // println!("");
 }
