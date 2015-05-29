@@ -69,7 +69,7 @@ impl Line for CodeLine {
                 }
             }
 
-            let word_slice = self.code.slice(from, to);
+            let word_slice: &str = self.code.slice(from, to);
             result.push(word_slice);
 
             previous_word_last_idx = to;
